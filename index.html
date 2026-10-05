@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Entrenamientos</title>
+<style>
+:root{--bg:#f4f7f4;--card:#fff;--ink:#14201a;--soft:#66756b;--line:#dbe4dd;--ac:#2e9d57;--bad:#d9534f;--warn:#e0a030;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a0f0c;--card:#131a16;--ink:#edf3ee;--soft:#8a9a8f;--line:#26312a}}
+:root[data-theme="dark"]{--bg:#0a0f0c;--card:#131a16;--ink:#edf3ee;--soft:#8a9a8f;--line:#26312a}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Inter",sans-serif;font-size:15px;max-width:520px;margin:0 auto;padding:12px 14px 40px}
+h1{font-size:20px;margin:6px 0 12px}h2{font-size:15px;margin:0 0 8px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}.tabs button{flex:1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 12px;font-weight:600;cursor:pointer}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff}button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+button.x{color:var(--bad)}button.s{padding:5px 9px;font-size:13px}
+input,select,textarea{font:inherit;font-size:16px;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:8px}
+.row{display:flex;gap:8px;align-items:center}.row>*{margin-bottom:0}.grow{flex:1;min-width:0}
+.soft{color:var(--soft);font-size:12.5px}.tag{font-size:11px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--soft)}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px}.chips button{white-space:nowrap}
+.mn{width:64px;text-align:center;padding:7px}
+.parallel{border:1px solid var(--ac);background:#0d1510;border-radius:14px;padding:12px;margin-bottom:10px}.parallel-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.parallel-title{font-weight:800}.parallel-note{font-size:12px;color:var(--soft);margin:5px 0 9px}.group{border:1px solid var(--line);border-radius:11px;padding:9px;margin-top:8px;background:var(--card)}.group-title{font-weight:700;font-size:13px}.pos-select{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 9px}.pos-select label{display:flex;align-items:center;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:7px;background:var(--bg)}.poschips{display:flex;gap:5px;flex-wrap:wrap;margin:5px 0}.poschip{font-size:10px;padding:3px 6px;border-radius:6px;border:1px solid var(--line);color:var(--soft)}.parallel-total{font-size:13px;font-weight:700;color:var(--ac);margin-top:8px}.parallel-editor{border:1px solid var(--ac);border-radius:14px;padding:12px;margin-bottom:10px}
+</style><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2e9d57">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Entrenamientos">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head><body><div id="app"></div>
+<script>
+var K="sub13:";
+function ld(k,d){try{var v=localStorage.getItem(K+k);return v?JSON.parse(v):d}catch(e){return d}}
+function sv(k,v){try{localStorage.setItem(K+k,JSON.stringify(v));return true}catch(e){return false}}
+function uid(){return Math.random().toString(36).slice(2,9)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var CATS=["Charla","Activación","Rondos","Técnica","Físico","Táctica","Finalización","Juego","Específico","Pausa"];
+var POS=["Porteros","Defensas","Laterales","Pivotes","Interiores","Mediapuntas","Extremos","Delanteros"];
+var PS={Porteros:"POR",Defensas:"DEF",Laterales:"LAT",Pivotes:"PIV",Interiores:"INT",Mediapuntas:"MP",Extremos:"EXT",Delanteros:"DEL"};
+var SEED=[
+["Charla inicial","Charla",10,"Sentados en círculo: objetivo del día y del próximo partido en 2-3 ideas simples.","talk",{p:[[100,22,"B"],[150,40,"B"],[160,75,"B"],[125,98,"B"],[75,98,"B"],[40,75,"B"],[50,40,"B"]],g:[[85,55,30,16]]}],
+["Charla final y vuelta a la calma","Charla",5,"Estiramientos suaves y mensajes clave: qué ha ido bien y qué mejorar.","talk",{p:[[40,75,"B"],[90,75,"B"],[140,75,"B"]],path:["M30,65 Q40,35 50,65","M80,65 Q90,35 100,65","M130,65 Q140,35 150,65"]}],
+["Activación con balón","Activación",10,"Todos conducen en un cuadrado; a la señal cambian de ritmo, de dirección o de pie.","dribble",{p:[[30,90,"B"]],path:["M30,90 L60,30 L100,90 L140,30 L170,90"]}],
+["Pase y muévete","Activación",10,"Parejas con un balón: pasan y se desmarcan al espacio libre antes de recibir.","pairs",{p:[[50,70,"B"],[150,40,"Y"]],a:[[50,70,150,40],[150,40,90,90]]}],
+["Movilidad y coordinación","Activación",8,"Skipping, talones, zancadas y saltos sin balón de línea a línea.","line",{z:[20,180],p:[[20,55,"B"]],path:["M20,55 L180,55"]}],
+["Rondo ancho con 2 comodines","Rondos",12,"Dos equipos y dos comodines en un cuadrado grande; mantener la posesión con pases rápidos.","rondo",{co:[[30,20],[170,20],[170,100],[30,100]],p:[[30,20,"B"],[100,15,"B"],[170,20,"B"],[170,60,"B"],[170,100,"B"],[100,105,"B"],[30,100,"B"],[30,60,"B"],[80,55,"Y"],[120,65,"Y"]]}],
+["Rondo 4 vs 2","Rondos",10,"Cuadrado 10x10: cuatro pasan y dos presionan; quien pierde el balón entra al centro.","rondo",{co:[[55,15],[145,15],[145,95],[55,95]],p:[[55,15,"B"],[145,15,"B"],[145,95,"B"],[55,95,"B"],[85,45,"R"],[115,65,"R"]],a:[[55,15,145,15],[145,15,145,95]]}],
+["Conducción y regate en cuadrado","Técnica",12,"Regates y fintas en espacio reducido esquivando a los compañeros.","dribble",{p:[[40,30,"B"],[160,30,"B"],[40,90,"B"],[160,90,"B"],[100,60,"Y"]],path:["M20,60 Q60,20 100,60 T180,60"]}],
+["Pase y control orientado","Técnica",12,"Pase al compañero y primer control hacia el espacio, no hacia los pies.","pairs",{p:[[50,70,"B"],[150,70,"Y"]],a:[[150,70,55,70],[50,70,80,40]]}],
+["Control y giro","Técnica",10,"Recibir de espaldas, abrir el perfil y girar con el balón pegado al pie.","pairs",{p:[[100,80,"B"],[100,30,"Y"]],path:["M100,30 L100,70","M100,75 A15,15 0 1,0 115,60"]}],
+["Circuito de 5 estaciones","Físico",20,"Estaciones de 3 min: coordinación, saltos, velocidad, fuerza y balón; 1 min para rotar.","circuit",{n:[[30,30,"1"],[100,20,"2"],[170,30,"3"],[150,85,"4"],[50,85,"5"]],a:[[41,33,89,22],[111,21,159,29],[168,41,153,74],[139,88,61,88],[41,76,33,41]]}],
+["Velocidad y reacción con balón","Físico",10,"Salida rápida a una señal y duelo por el balón hasta la línea contraria.","line",{p:[[30,55,"B"],[170,55,"R"]],g:[[96,52,8,6]],a:[[30,55,92,55],[170,55,108,55]]}],
+["Amplitud y profundidad","Táctica",15,"Cuatro equipos por zonas: abrir el campo a las bandas y atacar el fondo.","zones",{z:[68,132],p:[[20,55,"B"],[100,30,"B"],[100,80,"B"],[180,55,"R"]],a:[[20,55,96,32]]}],
+["Salida de balón","Táctica",15,"Portero y defensas sacan jugando ante una presión ligera de dos delanteros.","zones",{g:[[0,45,10,20]],p:[[15,55,"Y"],[50,40,"B"],[50,80,"B"],[110,35,"R"],[110,80,"R"]],a:[[15,55,50,40]]}],
+["Remates a puerta","Finalización",15,"Pase, control y disparo por parejas en dos porterías; el portero rota.","goal",{g:[[0,45,8,20],[192,45,8,20]],p:[[40,55,"B"],[160,55,"Y"]],a:[[40,55,0,55],[160,55,200,55]]}],
+["Finalización 2 vs 1","Finalización",15,"Ataque de dos contra un defensa y portero: decidir entre pasar y disparar.","goal",{g:[[75,4,50,8]],p:[[100,18,"Y"],[70,70,"B"],[130,70,"B"],[100,50,"R"]],a:[[70,70,100,18],[130,70,100,18]]}],
+["Partido de posesión 6 vs 6","Juego",20,"Sin porterías: un punto por cada 5 pases consecutivos.","game",{p:[[30,30,"B"],[30,90,"B"],[70,55,"B"],[130,30,"R"],[130,90,"R"],[170,55,"R"]],a:[[30,30,70,55],[70,55,30,90]]}],
+["Partido condicionado","Juego",25,"Partido con reglas: máximo 2 toques o gol válido solo tras 5 pases.","game",{g:[[0,45,8,20],[192,45,8,20]],p:[[40,35,"B"],[40,80,"B"],[100,55,"B"],[160,35,"R"],[160,80,"R"]]}],
+["Partido libre","Juego",20,"Partido normal para aplicar lo trabajado en la sesión.","game",{g:[[0,45,8,20],[192,45,8,20]],z:[100],p:[[40,30,"B"],[40,80,"B"],[70,55,"B"],[160,30,"R"],[160,80,"R"],[130,55,"R"]]}],
+["Pilla-pilla con balón","Activación",8,"Todos conducen; dos pillan tocando con el pie el balón de otro, que pasa a pillar.","dribble",{p:[[30,30,"B"],[160,30,"B"],[30,90,"B"],[160,90,"B"],[95,60,"R"]],path:["M95,60 L140,35"]}],
+["Rondo de 3 equipos","Rondos",12,"Tres equipos de 4: dos mantienen el balón y uno presiona; cambian al robar.","rondo",{p:[[40,30,"B"],[55,45,"B"],[30,50,"B"],[45,20,"B"],[160,30,"Y"],[175,45,"Y"],[150,50,"Y"],[165,20,"Y"],[100,85,"R"],[115,95,"R"],[85,95,"R"],[100,70,"R"]]}],
+["Rondo 3 vs 1","Rondos",10,"Cuadrado pequeño: tres pasan y uno presiona. Pases rápidos y a un toque.","rondo",{co:[[60,20],[140,20],[100,90]],p:[[60,20,"B"],[140,20,"B"],[100,90,"B"],[100,45,"R"]],a:[[60,20,140,20],[140,20,100,90],[100,90,60,20]]}],
+["Conducción con cambios de dirección","Técnica",10,"Slalom entre conos con interior y exterior; vuelta rápida y relevo.","dribble",{co:[[50,30],[90,70],[130,30],[170,70]],path:["M20,50 Q50,20 70,45 T130,45 T190,50"],a:[[190,50,20,90]]}],
+["Pase largo y control","Técnica",12,"Parejas a 20 m: pase largo con empeine, control y devolución.","pairs",{p:[[25,60,"B"],[175,60,"Y"]],path:["M25,60 Q100,10 175,60"]}],
+["Golpeo interior y exterior","Técnica",10,"Pases a un toque con el interior y con el exterior, cada vez más rápido.","pairs",{p:[[60,55,"B"],[140,55,"Y"]],a:[[60,55,140,50],[140,55,60,60]]}],
+["Dominio y toques","Técnica",8,"Cada uno con su balón: toques con pie, muslo y cabeza sin que caiga.","dribble",{p:[[100,85,"B"]],g:[[96,30,8,8]],path:["M100,38 Q85,55 100,70 Q115,55 100,38"]}],
+["Juego de cabeza","Técnica",8,"Parejas: lanzar con la mano y devolver de cabeza, luego de cabeza a cabeza.","pairs",{p:[[40,80,"B"],[160,80,"Y"]],path:["M40,80 Q100,10 160,80"]}],
+["Circuito de agilidad con conos","Físico",15,"Escalera, conos y vallas bajas: apoyos rápidos y cambios de dirección.","circuit",{g:[[15,45,3,20],[25,45,3,20],[35,45,3,20],[45,45,3,20],[80,40,4,30],[95,40,4,30],[110,40,4,30]],co:[[140,55],[165,55]],p:[[185,55,"B"]],path:["M15,55 L185,55"]}],
+["Relevos con balón","Físico",12,"Equipos en fila: ida y vuelta conduciendo y relevo con la mano; gana el más rápido.","line",{p:[[20,35,"B"],[20,75,"B"]],path:["M20,35 L170,35"],a:[[170,35,20,35]]}],
+["Fuerza con el propio cuerpo","Físico",12,"Sentadillas, flexiones y planchas por estaciones de 40 s con descanso.","circuit",{n:[[100,20,"1"],[100,55,"2"],[100,90,"3"]],a:[[100,32,100,43],[100,67,100,78]]}],
+["Presión tras pérdida","Táctica",15,"Al perder el balón, los más cercanos presionan 5 segundos para recuperarlo.","zones",{p:[[100,55,"R"],[60,30,"B"],[140,30,"B"],[100,90,"B"]],a:[[60,30,95,50],[140,30,105,50],[100,90,100,65]]}],
+["Basculación defensiva","Táctica",15,"Línea de 4 defensas se mueve junta hacia el lado del balón.","zones",{p:[[40,70,"B"],[80,70,"B"],[120,70,"B"],[160,70,"B"]],g:[[16,67,6,6]],a:[[100,70,40,70]]}],
+["Transiciones ataque-defensa","Táctica",15,"Al robar se ataca rápido a la otra portería; al perder se repliega.","game",{g:[[0,45,8,20],[192,45,8,20]],p:[[60,55,"B"],[140,55,"R"]],a:[[60,55,185,55],[140,55,15,55]]}],
+["Superioridad 4 vs 3","Táctica",15,"Ataque con un jugador más: buscar el pase que rompe la línea.","game",{p:[[30,30,"B"],[30,90,"B"],[90,20,"B"],[90,100,"B"],[130,35,"R"],[130,85,"R"],[160,60,"R"]],a:[[90,20,160,60]]}],
+["Remate tras centro","Finalización",15,"Centro desde la banda y dos delanteros atacan el primer y segundo palo.","goal",{g:[[75,4,50,8]],p:[[185,70,"B"],[90,85,"R"],[130,90,"R"]],a:[[185,70,95,85]]}],
+["Duelo 1 vs 1 con portero","Finalización",12,"Pase al pie del delantero, regate corto y disparo ante el portero.","goal",{g:[[75,4,50,8]],p:[[100,18,"Y"],[100,70,"B"],[60,95,"R"]],a:[[60,95,100,70],[100,70,100,25]]}],
+["Finalización en circuito","Finalización",15,"Dos filas: pared, control y disparo; cambian de fila tras cada remate.","goal",{g:[[75,4,50,8]],p:[[60,90,"B"],[140,90,"Y"]],a:[[60,90,95,40],[140,90,105,40]]}],
+["Partido 7 vs 7 reducido","Juego",20,"Campo reducido y porterías pequeñas para tocar más balón.","game",{g:[[0,50,6,10],[194,50,6,10]],p:[[40,40,"B"],[40,75,"B"],[90,55,"B"],[150,40,"R"],[150,75,"R"],[110,55,"R"]]}],
+["Partido con comodín","Juego",20,"Un jugador comodín juega siempre con el equipo que tiene el balón.","game",{p:[[40,40,"B"],[40,80,"B"],[160,40,"R"],[160,80,"R"],[100,60,"W"]]}],
+["Mini torneo por equipos","Juego",25,"Cuatro equipos, partidos de 5 min; suman puntos por victorias y goles.","game",{p:[[30,25,"B"],[45,35,"B"],[170,25,"R"],[155,35,"R"],[30,85,"Y"],[45,75,"Y"],[170,85,"W"],[155,75,"W"]]}],
+["Charla táctica con pizarra","Charla",10,"Pizarra con la idea de juego: dónde estar con y sin balón.","talk",{g:[[65,8,70,24]],p:[[40,70,"B"],[100,90,"B"],[160,70,"B"]]}],
+["Estiramientos finales","Charla",7,"Estiramientos de piernas y espalda, 20 s cada uno, respirando tranquilos.","talk",{p:[[50,80,"B"],[100,80,"B"],[150,80,"B"]],path:["M50,80 L50,50","M100,80 L100,50","M150,80 L150,50"]}],
+["Escalera de agilidad","Físico",6,"Escalera de coordinación en el suelo (6-8 pasos): apoyos rápidos alternando patrones (un apoyo, dos apoyos, lateral). 3 series por jugador.","",{g:[[40,30,4,50],[60,30,4,50],[80,30,4,50],[100,30,4,50],[120,30,4,50],[140,30,4,50]],p:[[20,55,"B"]],path:["M20,55 Q90,40 170,55"]}],
+["Carrera 5-10-5 (cambios de dirección)","Físico",6,"Tres conos en línea separados 5 y 10 metros: sprint al cono central, vuelta al lateral opuesto y sprint final al otro extremo.","",{co:[[40,55],[100,55],[160,55]],path:["M40,55 L100,55 L40,55 L160,55"]}],
+["Salto lateral entre vallas bajas","Físico",6,"5 vallas bajas en línea: saltos laterales a pies juntos lo más rápido posible, y trote de vuelta por fuera.","",{co:[[50,55],[80,55],[110,55],[140,55],[170,55]],path:["M30,55 L50,40 L50,70 L80,40 L80,70 L110,40 L110,70 L140,40 L140,70 L170,55"]}],
+["Saltos a la comba","Físico",5,"Saltos a la comba individuales: 30 s de trabajo y 15 s de descanso, alternando pies juntos y a la pata coja.","",{p:[[100,70,"B"]],path:["M70,50 Q100,10 130,50"]}],
+["Sprint resistido con banda elástica","Físico",6,"Parejas: uno esprinta 15 m resistido por una banda elástica sujeta por el compañero; 6 series cortas con recuperación completa.","",{p:[[30,70,"R"],[60,70,"B"]],a:[[60,70,160,70]]}],
+["Burpees y salto vertical al remate","Físico",7,"Burpee completo y, al levantarse, salto vertical para rematar un balón suspendido o lanzado por el entrenador.","",{p:[[100,80,"B"],[100,25,"Y"]],a:[[100,75,100,35]]}],
+["Circuito de fuerza: sentadillas, flexiones y plancha","Físico",7,"3 estaciones de fuerza con el propio peso corporal: sentadillas con salto, flexiones y plancha frontal. 40 s de trabajo y 20 s de descanso en cada una.","",{n:[[40,55,"1"],[100,55,"2"],[160,55,"3"]],a:[[52,55,88,55],[112,55,148,55]]}],
+["Transporte de balón medicinal en pareja","Físico",6,"Parejas transportan un balón medicinal (o un balón de fútbol pesado) 15 m caminando en sentadilla; vuelta trotando sin balón.","",{p:[[60,55,"B"],[75,55,"B"]],g:[[64,50,8,8]],a:[[75,55,160,55]]}],
+["Plancha frontal con rotación y toque de balón","Físico",6,"Posición de plancha frontal; alternar toques al balón colocado a un lado y al otro sin perder la cadera alineada.","",{p:[[100,60,"B"]],g:[[70,75,10,6],[120,75,10,6]],a:[[100,60,75,75],[100,60,125,75]]}],
+["Equilibrio a una pierna con pase","Físico",6,"A la pata coja, recibir y devolver el pase al compañero sin perder el equilibrio; 10 pases y cambio de pierna.","",{p:[[50,70,"B"],[150,70,"Y"]],g:[[42,78,16,4]],a:[[150,70,58,70]]}],
+["Control orientado bajo presión","Técnica",10,"Recibir de espaldas a la portería con un defensor pegado marcando por detrás; girar hacia el lado libre antes del segundo toque.","",{p:[[100,80,"B"],[100,95,"R"],[100,20,"Y"]],a:[[100,20,100,75]]}],
+["Pase interior en movimiento lateral","Técnica",10,"En parejas desplazándose en paralelo, pase raso con el interior sin detenerse; alternar pie derecho e izquierdo cada 5 pases.","",{p:[[40,40,"B"],[160,70,"Y"]],a:[[40,40,160,70],[160,70,40,40]]}],
+["Rondo 5 vs 2 en rombo","Rondos",12,"Cinco atacantes forman un rombo alrededor de dos defensores centrales; buscar el pase diagonal que supere a los dos defensores a la vez.","",{p:[[100,15,"B"],[40,45,"B"],[160,45,"B"],[40,85,"B"],[160,85,"B"],[85,50,"R"],[115,65,"R"]]}],
+["Línea defensiva y fuera de juego","Táctica",15,"Línea de 4 defensas sube junta tras el despeje; los delanteros buscan el desmarque de ruptura a la espalda sin adelantarse antes de tiempo.","",{p:[[40,80,"B"],[80,80,"B"],[120,80,"B"],[160,80,"B"],[60,30,"R"],[140,30,"R"]],a:[[40,80,40,60],[160,80,160,60]]}],
+["Ataque por banda y centro al segundo palo","Táctica",15,"El extremo encara en banda, el lateral da amplitud por fuera y un delantero ataca el segundo palo mientras el otro cubre el primero.","",{p:[[170,30,"B"],[185,60,"B"],[110,85,"R"],[150,90,"R"]],a:[[170,30,115,85]]}],
+["Disparo tras control de espaldas","Finalización",12,"Recibir de espaldas a portería, girar con un solo toque y disparar a puerta en menos de tres segundos.","",{g:[[75,4,50,8]],p:[[100,70,"B"],[100,95,"Y"]],a:[[100,95,100,75],[100,70,100,15]]}],
+["Partido a dos toques con zonas de gol","Juego",20,"Partido normal, pero solo vale el gol si el último pase viene desde la zona rival; máximo dos toques por jugador en todo el campo.","",{g:[[0,45,8,20],[192,45,8,20]],z:[68,132],p:[[30,40,"B"],[30,80,"B"],[100,40,"R"],[100,80,"R"],[170,40,"B"],[170,80,"R"]]}],
+["Activación articular guiada","Charla",8,"En círculo, movilidad de tobillos, cadera y hombros; cada ejercicio 20 s, antes de coger el balón.","",{p:[[100,20,"B"],[150,35,"B"],[165,70,"B"],[130,95,"B"],[70,95,"B"],[35,70,"B"],[50,35,"B"]],co:[[100,58]]}]];
+var WATER_EX={id:"water-5",n:"💧 Pausa para beber agua",c:"Pausa",m:5,d:"Parada de 5 minutos para hidratarse, respirar y recuperar antes de continuar.",v:"",t:"talk",pos:[],L:{p:[[100,65,"B"]],path:["M75,65 Q100,20 125,65"]}};
+var POSITION_SEED=[
+{id:"pos-por-1",n:"Porteros — blocaje + pase con oposición",c:"Específico",m:12,d:"Portero recibe, bloca y juega con precisión mientras un atacante presiona la recepción.",pos:["Porteros"]},
+{id:"pos-por-2",n:"Porteros — 1v1 y salida rápida",c:"Específico",m:10,d:"Portero decide aguantar, achicar o blocar según la conducción del delantero.",pos:["Porteros"]},
+{id:"pos-def-1",n:"Defensas — 1v1 perfilado hacia banda",c:"Específico",m:10,d:"Defensor orienta al atacante hacia fuera, temporiza y entra cuando el balón se separa del pie.",pos:["Defensas"]},
+{id:"pos-def-2",n:"Defensas — despeje + segunda jugada",c:"Específico",m:10,d:"Despejar lejos de zona central y reaccionar inmediatamente a la segunda jugada.",pos:["Defensas"]},
+{id:"pos-lat-1",n:"Laterales — recibir abierto y progresar",c:"Específico",m:12,d:"Lateral recibe abierto, orienta hacia delante y supera una línea con conducción o pase.",pos:["Laterales"]},
+{id:"pos-lat-2",n:"Laterales — 2v1 con extremo",c:"Específico",m:12,d:"Lateral y extremo atacan a un defensor: fijar, doblar o jugar por dentro según la defensa.",pos:["Laterales","Extremos"]},
+{id:"pos-piv-1",n:"Pivotes — perfil + salida bajo presión",c:"Específico",m:12,d:"Pivote escanea antes del pase y decide jugar de cara o girar bajo presión.",pos:["Pivotes"]},
+{id:"pos-piv-2",n:"Pivotes — cobertura tras pérdida",c:"Específico",m:10,d:"Tras pérdida, el pivote protege el pasillo central y tapa el pase vertical.",pos:["Pivotes"]},
+{id:"pos-int-1",n:"Interiores — recibir entre líneas y girar",c:"Específico",m:12,d:"Interior recibe entre líneas y decide girar, descargar o filtrar pase.",pos:["Interiores","Mediapuntas"]},
+{id:"pos-int-2",n:"Interiores — llegada desde segunda línea",c:"Específico",m:12,d:"Interior juega y rompe después hacia el área para finalizar desde segunda línea.",pos:["Interiores"]},
+{id:"pos-mp-1",n:"Mediapuntas — recepción + último pase",c:"Específico",m:12,d:"Mediapunta recibe entre líneas y busca pase al espacio o asistencia.",pos:["Mediapuntas"]},
+{id:"pos-ext-1",n:"Extremos — 1v1 + decisión final",c:"Específico",m:12,d:"Extremo recibe abierto y decide atacar por fuera, diagonal interior o pase atrás.",pos:["Extremos"]},
+{id:"pos-ext-2",n:"Extremos — diagonal hacia dentro",c:"Específico",m:10,d:"Extremo fija amplitud y ataca el intervalo lateral-central en el momento adecuado.",pos:["Extremos"]},
+{id:"pos-del-1",n:"Delanteros — apoyo + ruptura",c:"Específico",m:12,d:"Delantero apoya, fija al central y rompe a la espalda cuando aparece el pase.",pos:["Delanteros"]},
+{id:"pos-del-2",n:"Delanteros — primer palo, segundo palo y rechace",c:"Específico",m:10,d:"Atacar primer palo, segundo palo y rechace en tres acciones consecutivas.",pos:["Delanteros"]},
+{id:"pos-por-3",n:"Porteros — juego de pies con tercer hombre",c:"Específico",m:12,d:"Portero recibe del central, juega de cara con el pivote y vuelve a ofrecerse para progresar con el tercer hombre.",pos:["Porteros"]},
+{id:"pos-por-4",n:"Porteros — centros y segunda acción",c:"Específico",m:12,d:"Centros desde ambos lados: blocaje o despeje y reacción inmediata ante un segundo balón.",pos:["Porteros"]},
+{id:"pos-def-3",n:"Defensas — temporizar y cerrar línea de pase",c:"Específico",m:10,d:"Central salta al poseedor mientras el compañero cubre espalda y línea de pase interior.",pos:["Defensas"]},
+{id:"pos-def-4",n:"Defensas — defensa del área y centros",c:"Específico",m:12,d:"Defensores coordinan marcas, atacan el balón y protegen primer palo, segundo palo y frontal.",pos:["Defensas"]},
+{id:"pos-lat-3",n:"Laterales — 2v1 y llegada a línea de fondo",c:"Específico",m:12,d:"Lateral combina con extremo, supera al defensor y decide entre centro atrás, primer palo o pase interior.",pos:["Laterales","Extremos"]},
+{id:"pos-lat-4",n:"Laterales — cerrar por dentro tras pérdida",c:"Específico",m:10,d:"Tras perder el balón, lateral repliega hacia dentro, protege el intervalo y después salta a banda.",pos:["Laterales","Pivotes"]},
+{id:"pos-piv-3",n:"Pivotes — recibir a espaldas de la presión",c:"Específico",m:12,d:"Pivote se mueve fuera de la sombra del rival, recibe perfilado y juega al tercer hombre.",pos:["Pivotes"]},
+{id:"pos-piv-4",n:"Pivotes — cambio de orientación",c:"Específico",m:10,d:"Recibir de un central y cambiar rápidamente al lateral o extremo del lado débil.",pos:["Pivotes","Laterales"]},
+{id:"pos-int-3",n:"Interiores — tercer hombre y ruptura",c:"Específico",m:12,d:"Interior juega de cara, continúa su carrera y recibe del tercer hombre para atacar espacio.",pos:["Interiores"]},
+{id:"pos-int-4",n:"Interiores — llegada al área desde atrás",c:"Específico",m:10,d:"Temporizar la llegada y atacar frontal o segundo palo cuando el balón entra por banda.",pos:["Interiores"]},
+{id:"pos-mp-2",n:"Mediapuntas — girar entre líneas",c:"Específico",m:10,d:"Recibir entre líneas, proteger el balón con el cuerpo y girar cuando haya ventaja.",pos:["Mediapuntas","Interiores"]},
+{id:"pos-mp-3",n:"Mediapuntas — pared y pase al espacio",c:"Específico",m:12,d:"Mediapunta combina con delantero y filtra el pase al espacio en el momento de la ruptura.",pos:["Mediapuntas","Delanteros"]},
+{id:"pos-ext-3",n:"Extremos — fijar, conducir y pasar atrás",c:"Específico",m:12,d:"Extremo fija abierto, conduce hasta atraer al defensor y busca el pase atrás al borde del área.",pos:["Extremos"]},
+{id:"pos-ext-4",n:"Extremos — presión al lateral rival",c:"Específico",m:10,d:"Trabajar orientación de la presión, distancia al lateral y cierre de línea interior.",pos:["Extremos","Delanteros"]},
+{id:"pos-del-3",n:"Delanteros — fijar central y descargar",c:"Específico",m:10,d:"Delantero fija al central, recibe de espaldas y descarga de primeras para permitir la llegada de un compañero.",pos:["Delanteros"]},
+{id:"pos-del-4",n:"Delanteros — atacar espalda de la defensa",c:"Específico",m:12,d:"Coordinar desmarque de ruptura con el pase del mediapunta, variando carrera al primer o segundo espacio.",pos:["Delanteros","Mediapuntas"]}
+];
+var CIRCUIT_SEED=[
+{id:"circuit-1",n:"Circuito físico A — Velocidad y agilidad",c:"Físico",m:36,d:"6 estaciones: escalera de agilidad, carrera 5-10-5, saltos laterales entre vallas, comba, sprint resistido con banda y burpee + salto. 5-6 min por estación y rotación rápida.",t:"circuit",L:{n:[[30,30,"1"],[100,20,"2"],[170,30,"3"],[150,85,"4"],[50,85,"5"],[100,90,"6"]],a:[[41,33,89,22],[111,21,159,29],[168,41,153,74],[139,88,61,88],[41,76,33,41],[60,85,95,90]]}},
+{id:"circuit-2",n:"Circuito físico B — Fuerza funcional",c:"Físico",m:35,d:"5 estaciones: sentadillas, flexiones, plancha con rotación, transporte de balón medicinal y burpee + salto. Trabajo controlado, buena técnica y recuperación corta entre estaciones.",t:"circuit",L:{n:[[35,30,"1"],[100,20,"2"],[165,30,"3"],[140,85,"4"],[60,85,"5"]],a:[[47,33,88,22],[112,22,153,31],[158,41,143,74],[124,87,76,87],[48,76,42,41]]}},
+{id:"circuit-3",n:"Circuito físico C — Coordinación y equilibrio",c:"Físico",m:30,d:"5 estaciones: escalera de coordinación, equilibrio a una pierna con pase, saltos laterales, transporte de balón medicinal y comba. Prioridad a coordinación, control corporal y ejecución limpia.",t:"circuit",L:{n:[[35,30,"1"],[100,20,"2"],[165,30,"3"],[140,85,"4"],[60,85,"5"]],a:[[47,33,88,22],[112,22,153,31],[158,41,143,74],[124,87,76,87],[48,76,42,41]]}},
+{id:"circuit-4",n:"Circuito físico D — Resistencia y potencia",c:"Físico",m:38,d:"6 estaciones: sprint resistido, carrera 5-10-5, circuito de fuerza, burpee + salto, plancha con toque de balón y comba. Esfuerzos cortos y recuperación suficiente para mantener calidad.",t:"circuit",L:{n:[[30,30,"1"],[100,20,"2"],[170,30,"3"],[160,85,"4"],[100,100,"5"],[40,85,"6"]],a:[[41,33,89,22],[111,21,159,29],[168,41,158,74],[151,88,109,98],[91,100,49,88],[41,76,33,41]]}},
+{id:"circuit-5",n:"Circuito físico E — 5 estaciones",c:"Físico",m:20,d:"5 estaciones de 3 min + 1 min para rotar: coordinación, saltos, velocidad, fuerza y balón. Ideal como bloque físico corto dentro de una sesión con mucho balón.",t:"circuit",L:{n:[[30,30,"1"],[100,20,"2"],[170,30,"3"],[150,85,"4"],[50,85,"5"]],a:[[41,33,89,22],[111,21,159,29],[168,41,153,74],[139,88,61,88],[41,76,33,41]]}}
+];
+var ex=ld("ex",null)||[],sn=ld("sn",0);
+CIRCUIT_SEED.forEach(function(e){var q=ex.filter(function(x){return x.id===e.id})[0];if(!q)ex.push({id:e.id,n:e.n,c:e.c,m:e.m,d:e.d,v:"",t:e.t||"",L:e.L||null,pos:[]});});
+POSITION_SEED.forEach(function(e){var q=ex.filter(function(x){return x.id===e.id})[0];if(!q)ex.push({id:e.id,n:e.n,c:e.c,m:e.m,d:e.d,v:"",t:"",L:null,pos:e.pos});else q.pos=e.pos});
+if(!ex.some(function(x){return x.id==="water-5"})){ex.push(WATER_EX)}
+
+SEED.forEach(function(a,i){var id="s"+i,f=ex.filter(function(x){return x.id===id})[0];if(f){if(!f.t&&!f.L){f.t=a[4];f.L=a[5]||null}}else if(i>=sn)ex.push({id:id,n:a[0],c:a[1],m:a[2],d:a[3],v:"",t:a[4]||"",L:a[5]||null})});
+sv("sn",SEED.length);sv("ex",ex);
+var ses=ld("ses",[]),tab="ses",cur=null,picker=false,pcat="Todos",ef=null,TARGET=90;
+var STA={
+esc:{n:"Escalera de agilidad",d:"Escalera de coordinación en el suelo (6-8 pasos): apoyos rápidos alternando patrones. 3 series por jugador.",L:{g:[[40,30,4,50],[60,30,4,50],[80,30,4,50],[100,30,4,50],[120,30,4,50],[140,30,4,50]],p:[[20,55,"B"]],path:["M20,55 Q90,40 170,55"]}},
+c55:{n:"Carrera 5-10-5",d:"Tres conos en línea separados 5 y 10 metros: sprint al central, vuelta al lateral opuesto y sprint final al otro extremo.",L:{co:[[40,55],[100,55],[160,55]],path:["M40,55 L100,55 L40,55 L160,55"]}},
+val:{n:"Salto lateral entre vallas bajas",d:"5 vallas bajas en línea: saltos laterales a pies juntos lo más rápido posible, y trote de vuelta por fuera.",L:{co:[[50,55],[80,55],[110,55],[140,55],[170,55]],path:["M30,55 L50,40 L50,70 L80,40 L80,70 L110,40 L110,70 L140,40 L140,70 L170,55"]}},
+cmb:{n:"Saltos a la comba",d:"Saltos a la comba individuales: 30 s de trabajo y 15 s de descanso, alternando pies juntos y a la pata coja.",L:{p:[[100,70,"B"]],path:["M70,50 Q100,10 130,50"]}},
+spb:{n:"Sprint resistido con banda elástica",d:"Parejas: uno esprinta 15 m resistido por una banda elástica sujeta por el compañero; 6 series cortas con recuperación completa.",L:{p:[[30,70,"R"],[60,70,"B"]],a:[[60,70,160,70]]}},
+bur:{n:"Burpees y salto vertical al remate",d:"Burpee completo y, al levantarse, salto vertical para rematar un balón suspendido o lanzado por el entrenador.",L:{p:[[100,80,"B"],[100,25,"Y"]],a:[[100,75,100,35]]}},
+cfz:{n:"Circuito de fuerza: sentadillas, flexiones y plancha",d:"3 estaciones de fuerza con el propio peso corporal. 40 s de trabajo y 20 s de descanso en cada una.",L:{n:[[40,55,"1"],[100,55,"2"],[160,55,"3"]],a:[[52,55,88,55],[112,55,148,55]]}},
+tmd:{n:"Transporte de balón medicinal en pareja",d:"Parejas transportan un balón medicinal 15 m caminando en sentadilla; vuelta trotando sin balón.",L:{p:[[60,55,"B"],[75,55,"B"]],g:[[64,50,8,8]],a:[[75,55,160,55]]}},
+pcr:{n:"Plancha frontal con rotación y toque de balón",d:"Posición de plancha frontal; alternar toques al balón colocado a un lado y al otro sin perder la cadera alineada.",L:{p:[[100,60,"B"]],g:[[70,75,10,6],[120,75,10,6]],a:[[100,60,75,75],[100,60,125,75]]}},
+eqp:{n:"Equilibrio a una pierna con pase",d:"A la pata coja, recibir y devolver el pase al compañero sin perder el equilibrio; 10 pases y cambio de pierna.",L:{p:[[50,70,"B"],[150,70,"Y"]],g:[[42,78,16,4]],a:[[150,70,58,70]]}}
+};
+function STI(k,m){var s=STA[k];return {n:s.n,c:"Físico",m:m,d:s.d,v:"",t:"",L:s.L}}
+var SEED_SES=[
+{id:"ses0",name:"Circuito físico A — Velocidad y agilidad",items:[STI("esc",6),STI("c55",6),STI("val",6),STI("cmb",6),STI("spb",6),STI("bur",6)]},
+{id:"ses1",name:"Circuito físico B — Fuerza funcional",items:[STI("cfz",7),STI("tmd",7),STI("pcr",7),STI("eqp",7),STI("bur",7)]},
+{id:"ses2",name:"Circuito físico C — Coordinación y equilibrio",items:[STI("esc",6),STI("eqp",6),STI("val",6),STI("tmd",6),STI("cmb",6)]},
+{id:"ses3",name:"Circuito físico D — Resistencia y potencia",items:[STI("spb",7),STI("c55",7),STI("cfz",7),STI("bur",7),STI("pcr",6),STI("cmb",6)]}
+];
+var sesn=ld("sesn",0);
+SEED_SES.forEach(function(s,i){var old=ses.filter(function(x){return x.id===s.id})[0];if(!old&&i>=sesn)ses.push({id:s.id,name:s.name+" · grupos de 3-4, "+s.items.length+" estaciones",date:today(),start:"17:00",st:"programada",items:s.items})});
+// Los circuitos por defecto pasan a la biblioteca de Físico; los ya finalizados se conservan como historial.
+ses=ses.filter(function(s){return !/^ses[0-3]$/.test(s.id)||s.st==="finalizada"});
+sv("sesn",SEED_SES.length);sv("ses",ses);
+function save(){var ok=sv("ex",ex)&&sv("ses",ses);if(!ok)alert("No se ha podido guardar. Comprueba el almacenamiento del navegador del iPhone.");return ok}
+function S(){return ses.filter(function(s){return s.id===cur})[0]}
+function itemMin(i){return i&&i.kind==="parallel"?Math.max.apply(null,(i.groups||[]).map(function(g){return +g.m||0}).concat([0])):(+i.m||0)}
+function tot(s){return s.items.reduce(function(a,i){return a+itemMin(i)},0)}
+function posTags(a){return (a||[]).map(function(p){return '<span class="poschip">'+esc(PS[p]||p)+'</span>'}).join('')}
+function addParallel(){S().items.push({kind:"parallel",n:"Trabajo simultáneo por posiciones",groups:[{id:uid(),pos:["Defensas"],exerciseId:"pos-def-1",n:"Defensas — 1v1 perfilado hacia banda",m:10,d:""},{id:uid(),pos:["Pivotes","Interiores"],exerciseId:"pos-piv-1",n:"Pivotes — perfil + salida bajo presión",m:12,d:""},{id:uid(),pos:["Extremos","Delanteros"],exerciseId:"pos-ext-1",n:"Extremos — 1v1 + decisión final",m:12,d:""}]});save();R()}
+function editParallel(k){ei=k;R()}
+function groupAdd(k){S().items[k].groups.push({id:uid(),pos:["Defensas"],exerciseId:"pos-def-1",n:"Nuevo trabajo por posición",m:10,d:""});save();R()}
+function saveParallel(k){var i=S().items[k],gs=i.groups||[];gs.forEach(function(g,z){var sel=document.getElementById("gex"+z),mi=document.getElementById("gm"+z);if(sel){var e=ex.filter(function(x){return x.id===sel.value})[0];if(e){g.exerciseId=e.id;g.n=e.n;g.d=e.d;g.pos=e.pos||[]}}if(mi)g.m=Math.max(1,+mi.value||10)});ei=-1;save();R()}
+function rmGroup(k,z){S().items[k].groups.splice(z,1);if(!S().items[k].groups.length)S().items.splice(k,1);save();R()}
+function today(){return new Date().toISOString().slice(0,10)}
+function fd(d){try{return new Date(d+"T00:00:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"short"})}catch(e){return d}}
+function filterHome(n){homeFilter=n===1?"programadas":n===2?"realizadas":"todas";R()}
+function go(t){tab=t;cur=null;picker=false;ef=null;R()}
+function newS(p){ei=-1;var s={id:uid(),name:"Sesión "+(ses.length+1),date:today(),start:"18:00",st:p?"finalizada":"programada",items:[]};ses.unshift(s);cur=s.id;save();R()}
+function openSIndex(i){var s=ses[i];if(s)openS(s.id)}
+function openS(id){ei=-1;cur=id;picker=false;R()}
+function delS(id){if(confirm("¿Borrar esta sesión?")){ses=ses.filter(function(s){return s.id!==id});cur=null;save();R()}}
+function dupS(id){var o=ses.filter(function(s){return s.id===id})[0];var c=JSON.parse(JSON.stringify(o));c.id=uid();c.name=o.name+" (copia)";ses.unshift(c);save();R()}
+function setF(k,v){S()[k]=v;save();R()}
+function addI(id){var e=ex.filter(function(x){return x.id===id})[0];S().items.push({n:e.n,c:e.c,m:e.m,d:e.d,v:e.v||"",t:e.t||"",L:e.L||null,pos:e.pos||[]});picker=false;save();R()}
+function addWater(){var e=ex.filter(function(x){return x.id==="water-5"})[0]||WATER_EX;S().items.push({n:e.n,c:e.c,m:5,d:e.d,v:"",t:e.t||"",L:e.L||null,pos:[]});save();R()}
+function mv(i,d){var a=S().items,j=i+d;if(j<0||j>=a.length)return;var t=a[i];a[i]=a[j];a[j]=t;save();R()}
+function rm(i){S().items.splice(i,1);save();R()}
+function setM(i,v){S().items[i].m=Math.max(0,Math.floor(+v||0));save();R()}
+function copyS(){var s=S(),t=s.name+" · "+fd(s.date)+" · "+(s.start||"18:00")+"-"+endT(s)+" ("+tot(s)+" min)\n",c=0;s.items.forEach(function(i,k){t+="\n"+(k+1)+". "+i.n+" ("+itemMin(i)+" min)"+(i.d?"\n   "+i.d:"")});
+try{navigator.clipboard.writeText(t).then(function(){alert("Sesión copiada. Pégala en WhatsApp.")},function(){prompt("Copia el texto:",t)})}catch(e){prompt("Copia el texto:",t)}}
+function pc(c){pcat=c;R()}
+function newEx(){ef={id:"",n:"",c:"Técnica",m:10,d:"",v:"",pos:[],L:null};R()}
+function editEx(id){ef=JSON.parse(JSON.stringify(ex.filter(function(x){return x.id===id})[0]));R()}
+function selectedPositions(){return POS.filter(function(p){var el=document.getElementById("pos_"+PS[p]);return el&&el.checked})}
+function saveEx(){var n=document.getElementById("en").value.trim();if(!n){alert("Pon un nombre");return}
+var o={id:ef.id||uid(),n:n,c:document.getElementById("ec").value,m:Math.max(1,+document.getElementById("em").value||10),d:document.getElementById("ed").value.trim(),v:document.getElementById("ev").value.trim(),t:document.getElementById("et").value,pos:selectedPositions(),L:ef.L||null};
+var f=false;ex=ex.map(function(x){if(x.id===o.id){f=true;return o}return x});if(!f)ex.push(o);ef=null;save();R()}
+function delEx(id){if(confirm("¿Borrar este ejercicio de la biblioteca?")){ex=ex.filter(function(x){return x.id!==id});ef=null;save();R()}}
+function exRow(e,btn){return '<div class="card">'+diagSVG(e)+'<div class="row" style="margin-top:8px"><div class="grow"><b>'+esc(e.n)+'</b> <span class="tag">'+esc(e.c)+' · '+e.m+' min</span>'+(e.pos&&e.pos.length?'<div class="poschips">'+posTags(e.pos)+'</div>':"")+'<div class="soft">'+esc(e.d)+'</div>'+vl(e.v)+'</div>'+btn+'</div></div>'}
+function dlBox(name,url,file){var o=document.createElement("div");o.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:99;padding:20px";o.innerHTML='<div class="card" style="max-width:340px;width:100%;margin:0"><h2>Archivo listo</h2><div class="soft" style="margin-bottom:10px">'+esc(name)+'</div><div class="row" style="flex-direction:column;align-items:stretch;gap:8px"></div></div>';var box=o.querySelector(".row");
+if(file&&navigator.share){var b=document.createElement("button");b.className="p";b.textContent="Compartir / Guardar en Archivos";b.onclick=function(){try{navigator.share({files:[file],title:name}).catch(function(){})}catch(e){}};box.appendChild(b)}
+var a=document.createElement("a");a.href=url;a.download=name;a.target="_blank";a.rel="noopener";a.textContent="Abrir";a.style.cssText="text-align:center;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-weight:600;color:var(--ink);text-decoration:none";box.appendChild(a);
+var c=document.createElement("button");c.textContent="Cerrar";c.onclick=function(){o.remove();setTimeout(function(){URL.revokeObjectURL(url)},60000)};box.appendChild(c);document.body.appendChild(o)}
+async function dl(name,data){try{var d=window.claude&&claude.use&&await claude.use("downloads");if(d){await d.save({filename:name,data:data});return}}catch(e){if(e&&e.code==="declined")return}
+var type=/\.pdf$/i.test(name)?"application/pdf":"application/json",blob=data instanceof Blob?data:new Blob([data],{type:type}),file=null;try{file=new File([blob],name,{type:type})}catch(e){}
+try{if(file&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}}catch(e){if(e&&e.name==="AbortError")return}
+dlBox(name,URL.createObjectURL(blob),file)}
+function vl(u){return u&&/^https?:\/\//i.test(u)?'<div style="margin-top:4px"><a href="'+esc(u)+'" target="_blank" rel="noopener" style="color:var(--ac);font-weight:600">▶ Ver vídeo</a></div>':""}
+var ei=-1;
+function editI(k){ei=k;R()}
+function itemForm(i,k){return '<div class="card"><h2>Editar ejercicio de la sesión</h2><input id="in" value="'+esc(i.n)+'" placeholder="Nombre"><select id="ic">'+CATS.map(function(c){return'<option'+(c===i.c?" selected":"")+'>'+c+'</option>'}).join("")+'</select><input id="im" type="number" inputmode="numeric" value="'+i.m+'" placeholder="Minutos"><textarea id="id2" rows="3" placeholder="Finalidad / explicación">'+esc(i.d)+'</textarea><select id="it"><option value="">Sin dibujo</option>'+Object.keys(TN).map(function(x){return'<option value="'+x+'"'+(x===i.t?" selected":"")+'>Dibujo: '+TN[x]+'</option>'}).join("")+'</select><input id="iv" type="url" placeholder="Enlace al vídeo" value="'+esc(i.v||"")+'"><div class="row"><button class="p grow" onclick="saveI('+k+')">Guardar</button><button onclick="ei=-1;R()">Cancelar</button></div></div>'}
+function saveI(k){var g=function(x){return document.getElementById(x).value};S().items[k]={n:g("in").trim()||"Ejercicio",c:g("ic"),m:Math.max(0,Math.floor(+g("im")||0)),d:g("id2").trim(),v:g("iv").trim(),t:g("it")};ei=-1;save();R()}
+function parallelForm(i,k){var gs=i.groups||[];var h='<div class="parallel-editor"><h2>Trabajo simultáneo por posiciones</h2><div class="parallel-note">Los grupos se entrenan a la vez. El tiempo real del bloque es el del grupo más largo, no la suma.</div>';gs.forEach(function(g,z){h+='<div class="group"><div class="group-title">Grupo '+(z+1)+'</div><select id="gex'+z+'">'+ex.filter(function(e){return e.pos&&e.pos.length}).map(function(e){return'<option value="'+e.id+'"'+(e.id===g.exerciseId?' selected':'')+'>'+esc(e.n)+'</option>'}).join('')+'</select><div class="poschips">'+posTags(g.pos)+'</div><input id="gm'+z+'" class="mn" type="number" inputmode="numeric" value="'+(+g.m||10)+'" placeholder="Minutos"><div class="soft">'+esc(g.d||'')+'</div><button class="s x" onclick="rmGroup('+k+','+z+')">Quitar grupo</button></div>'});h+='<div class="row" style="margin-top:8px"><button class="grow" onclick="groupAdd('+k+')">+ Añadir grupo</button><button class="p grow" onclick="saveParallel('+k+')">Guardar bloque</button></div><button style="width:100%;margin-top:8px" onclick="ei=-1;R()">Cancelar</button></div>';return h}
+function svgPng(i){return new Promise(function(res){try{var svg=diagSVG(i).replace(/style="[^"]*" /,"").replace("<svg ",'<svg width="800" height="440" '),im=new Image();im.onload=function(){try{var c=document.createElement("canvas");c.width=800;c.height=440;c.getContext("2d").drawImage(im,0,0,800,440);res(c.toDataURL("image/png"))}catch(e){res(null)}};im.onerror=function(){res(null)};im.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)}catch(e){res(null)}})}
+async function pdfS(){var s=S();if(!window.jspdf){alert("No se pudo cargar el generador de PDF. Comprueba tu conexión.");return}
+var doc=new window.jspdf.jsPDF({unit:"mm",format:"a4"}),W=190,y=16;
+function line(t,z,b){doc.setFont("helvetica",b?"bold":"normal");doc.setFontSize(z);doc.splitTextToSize(String(t),W).forEach(function(l){if(y>284){doc.addPage();y=16}doc.text(l,10,y);y+=z*0.45+1.6})}
+line(s.name,18,1);line(wd(s.date)+" "+fd(s.date)+" - Horario: "+(s.start||"18:00")+" a "+endT(s)+"  ("+tot(s)+" min)",11);y+=5;
+for(var k=0;k<s.items.length;k++){var i=s.items[k],img=(i.t||i.L)?await svgPng(i):null;if(y+(img?100:30)>285){doc.addPage();y=16}
+line((k+1)+". "+i.n+" - "+itemMin(i)+" min ("+(i.kind==="parallel"?"SIMULTÁNEO":i.c)+")",13,1);y+=1;if(i.kind==="parallel"){line("Trabajo simultáneo por posiciones. Solo cuenta el grupo más largo: "+itemMin(i)+" min.",10);(i.groups||[]).forEach(function(g){line((g.pos||[]).join(" + ")+" — "+g.n+" ("+g.m+" min)",10)});y+=3;continue;}
+if(img){doc.addImage(img,"PNG",10,y,110,60.5);y+=64}
+if(i.d)line("Finalidad: "+i.d,10);if(i.v)line("Vídeo: "+i.v,9);y+=6}
+dl((s.name.replace(/[^\w\-]+/g,"_")||"sesion")+".pdf",doc.output("blob"))}
+function expAll(){dl("sesiones-sub13-"+today()+".json",JSON.stringify({app:"sesiones-sub13",ex:ex,ses:ses},null,2))}
+function impAll(){var inp=document.createElement("input");inp.type="file";inp.accept=".json,application/json";inp.onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var p=JSON.parse(r.result);if(!p||p.app!=="sesiones-sub13")throw 0;
+function mg(a,b){var m={};a.forEach(function(x){m[x.id]=x});(b||[]).forEach(function(x){m[x.id]=x});return Object.keys(m).map(function(k){return m[k]})}
+ex=mg(ex,p.ex);ses=mg(ses,p.ses);save();R();alert("Importado: "+(p.ses||[]).length+" sesiones y "+(p.ex||[]).length+" ejercicios.")}catch(x){alert("Archivo no válido")}};r.readAsText(f)};inp.click()}
+function shareCard(){return '<div class="card" style="margin-top:14px"><h2>Compartir con el otro entrenador</h2><div class="soft" style="margin-bottom:8px">Exporta todo a un archivo, envíalo por WhatsApp y que lo importe aquí. Al importar se fusiona con lo que ya tenga.</div><div class="row"><button class="grow" onclick="expAll()">📤 Exportar</button><button class="grow" onclick="impAll()">📥 Importar</button></div></div>'}
+var toast="";
+var TN={rondo:"Rondo",pairs:"Parejas",circuit:"Circuito",goal:"Remate",game:"Partido",zones:"Zonas",dribble:"Conducción",line:"Carrera",talk:"Charla"};
+var B="#3b82f6",RC="#ef4444",Y="#facc15";
+function d(x,y,c){return '<circle cx="'+x+'" cy="'+y+'" r="5" fill="'+c+'" stroke="#fff" stroke-width="1"/>'}
+function a(x1,y1,x2,y2){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#ar)"/>'}
+function c(x,y){return '<polygon points="'+x+','+(y-5)+' '+(x-4)+','+(y+3)+' '+(x+4)+','+(y+3)+'" fill="#f5a623"/>'}
+function tx(x,y,v){return '<text x="'+x+'" y="'+(y+3)+'" fill="#fff" font-size="8" font-weight="700" text-anchor="middle">'+v+'</text>'}
+function gl(x,y,w,h){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#fff" opacity=".85"/>'}
+function dot(x,y,k){return d(x,y,k==="R"?RC:k==="Y"?Y:k==="W"?"#fff":B)}
+function ren(L){var o="";(L.z||[]).forEach(function(x){o+='<line x1="'+x+'" y1="4" x2="'+x+'" y2="106" stroke="#fff" stroke-dasharray="4 3"/>'});(L.g||[]).forEach(function(r){o+=gl(r[0],r[1],r[2],r[3])});(L.co||[]).forEach(function(q){o+=c(q[0],q[1])});(L.a||[]).forEach(function(q){o+=a(q[0],q[1],q[2],q[3])});(L.path||[]).forEach(function(p){o+='<path d="'+p+'" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#ar)"/>'});(L.p||[]).forEach(function(q){o+=dot(q[0],q[1],q[2])});(L.n||[]).forEach(function(q){o+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="10" fill="#1d4ed8" stroke="#fff" stroke-width="1.5"/>'+tx(q[0],q[1],q[2])});return o}
+function diagSVG(i){var inner=i.L?ren(i.L):(i.t?diagInner(i.t):"");if(!inner)return"";return '<svg viewBox="0 0 200 110" style="width:100%;border-radius:10px;display:block" xmlns="http://www.w3.org/2000/svg"><defs><marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#fff"/></marker></defs><rect width="200" height="110" fill="#2f8f4e"/><rect x="4" y="4" width="192" height="102" fill="none" stroke="#ffffff99" stroke-width="1.5"/>'+inner+'</svg>'}
+function diagInner(t){var o="",i;
+if(t==="rondo"){o+='<rect x="55" y="15" width="90" height="80" fill="none" stroke="#fff" stroke-width="1.5"/>';[[55,15],[100,15],[145,15],[145,55],[145,95],[100,95],[55,95],[55,55]].forEach(function(q){o+=d(q[0],q[1],B)});o+=d(85,45,RC)+d(115,65,RC)+a(55,15,95,15)+a(145,15,145,50)+a(100,95,60,95)+c(100,55)}
+else if(t==="pairs"){for(i=0;i<3;i++){var y=25+i*30;o+=d(35,y,B)+d(165,y,Y)+a(42,y,158,y+(i%2?-6:6))}}
+else if(t==="circuit"){var P=[[30,30],[100,20],[170,30],[150,85],[50,85]];P.forEach(function(q,k){o+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="11" fill="#1d4ed8" stroke="#fff" stroke-width="1.5"/>'+tx(q[0],q[1],k+1);var n=P[(k+1)%5];o+=a(q[0]+(n[0]>q[0]?11:-11),q[1]+(n[1]>q[1]?6:-6),n[0]+(n[0]>q[0]?-13:13),n[1]+(n[1]>q[1]?-8:8))})}
+else if(t==="goal"){o+=gl(75,4,50,8)+d(100,18,RC);[[60,90],[100,90],[140,90]].forEach(function(q){o+=d(q[0],q[1],B)+a(q[0],q[1]-6,100+(q[0]-100)*.3,24)});o+=c(100,60)}
+else if(t==="game"){o+='<line x1="100" y1="4" x2="100" y2="106" stroke="#fff" stroke-width="1"/><circle cx="100" cy="55" r="16" fill="none" stroke="#fff"/>'+gl(0,45,6,20)+gl(194,45,6,20);[[40,30],[40,80],[70,55],[85,25],[110,80]].forEach(function(q){o+=d(q[0],q[1],B)});[[160,30],[160,80],[130,55],[115,25],[90,85]].forEach(function(q){o+=d(q[0],q[1],RC)});o+=c(100,55)}
+else if(t==="zones"){o+='<line x1="68" y1="4" x2="68" y2="106" stroke="#fff" stroke-dasharray="4 3"/><line x1="132" y1="4" x2="132" y2="106" stroke="#fff" stroke-dasharray="4 3"/>';[[34,85],[100,90],[166,85],[34,55],[100,60],[166,55]].forEach(function(q){o+=d(q[0],q[1],B)});o+=a(34,48,34,18)+a(100,52,100,18)+a(166,48,166,18)+d(100,15,RC)}
+else if(t==="dribble"){[30,65,100,135,170].forEach(function(x){o+=c(x,55)});o+=d(10,55,B)+'<path d="M16 55 Q30 30 47 55 T82 55 T117 55 T152 55 T188 55" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#ar)"/>'}
+else if(t==="talk"){o+='<rect x="70" y="10" width="60" height="26" rx="3" fill="#fff"/>'+tx(100,23,"PIZARRA").replace('fill="#fff"','fill="#14201a"');for(i=0;i<7;i++){var g=Math.PI*(0.1+0.8*i/6);o+=d(Math.round(100-72*Math.cos(g)),Math.round(52+42*Math.sin(g)),B)}}
+else{[30,65,100,135].forEach(function(y){y=y*0.75+8});o+='<line x1="20" y1="4" x2="20" y2="106" stroke="#fff"/><line x1="180" y1="4" x2="180" y2="106" stroke="#fff"/>';[22,45,68,90].forEach(function(y){o+=d(20,y,B)+a(28,y,172,y)})}
+return o}
+function wd(d){try{var w=new Date(d+"T00:00:00").toLocaleDateString("es-ES",{weekday:"long"});return w.charAt(0).toUpperCase()+w.slice(1)}catch(e){return""}}
+function endT(s){var p=(s.start||"18:00").split(":"),m=((+p[0])*60+(+p[1])+tot(s))%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")}
+function finS(){var s=S();save();toast="✓ Sesión guardada: "+s.name+" · "+fd(s.date)+" · "+(s.start||"18:00")+"–"+endT(s);cur=null;R()}
+var homeFilter="todas";
+function homeCard(s,label,icon){var t=tot(s);return '<div class="card" data-id="'+esc(s.id)+'" onclick="openSByData(this)"><b>'+esc(s.name)+'</b> <span class="tag">'+icon+' '+label+'</span><div class="soft">'+fd(s.date)+' · '+(s.start||"18:00")+'–'+endT(s)+' · '+t+' min'+(label==="Realizado"&&t===TARGET?" ✓":"")+'</div></div>'}
+function openSByData(el){openS(el.getAttribute("data-id"))}
+function homeList(arr,label,icon,empty){var h='<div class="soft" style="margin:4px 0 6px"><b>'+label.toUpperCase()+' ('+arr.length+')</b></div>';if(!arr.length)h+='<div class="soft" style="text-align:center;margin:12px 0 18px">'+empty+'</div>';arr.forEach(function(s){h+=homeCard(s,label.replace("Realizados","Realizado"),icon)});return h}
+function R(){var h='<h1>Entrenamientos</h1>';
+
+
+if(ef){h+='<div class="card"><h2>'+(ef.id?"Editar":"Nuevo")+' ejercicio</h2><input id="en" placeholder="Nombre" value="'+esc(ef.n)+'"><select id="ec">'+CATS.map(function(c){return'<option'+(c===ef.c?" selected":"")+'>'+c+'</option>'}).join("")+'</select><div class="soft" style="margin:2px 0 5px"><b>Posiciones</b> <span>(opcional)</span></div><div class="pos-select">'+POS.map(function(p){return '<label><input id="pos_'+PS[p]+'" type="checkbox" style="width:auto;margin:0 4px 0 0"'+(ef.pos&&ef.pos.indexOf(p)>=0?' checked':'')+'>'+p+'</label>'}).join('')+'</div><input id="em" type="number" inputmode="numeric" placeholder="Minutos" value="'+ef.m+'"><textarea id="ed" rows="3" placeholder="Descripción breve">'+esc(ef.d)+'</textarea><select id="et">'+Object.keys(TN).map(function(k){return'<option value="'+k+'"'+(k===ef.t?" selected":"")+'>Dibujo: '+TN[k]+'</option>'}).join("")+'</select><input id="ev" type="url" placeholder="Enlace al vídeo corto (YouTube, etc.)" value="'+esc(ef.v||"")+'"><div class="row"><button class="p grow" onclick="saveEx()">Guardar</button><button onclick="ef=null;R()">Cancelar</button>'+(ef.id?'<button class="x" onclick="delEx(\''+ef.id+'\')">Borrar</button>':'')+'</div></div>'}
+else if(cur&&S()){var s=S(),t=tot(s),d=t-TARGET,col=d===0?"var(--ac)":(d>0?"var(--bad)":"var(--warn)");
+h+='<button class="s" onclick="cur=null;picker=false;R()">← Sesiones</button><div class="card" style="margin-top:10px"><input value="'+esc(s.name)+'" onchange="setF(\'name\',this.value)"><input type="date" value="'+s.date+'" onchange="setF(\'date\',this.value)"><div class="soft" style="margin:-2px 0 6px">Día: <b>'+wd(s.date)+'</b></div><div class="row" style="margin-bottom:8px"><span class="soft">Inicio</span><input type="time" value="'+(s.start||"18:00")+'" onchange="setF(\'start\',this.value)"><span class="soft">Fin</span><b>'+endT(s)+'</b></div><div class="row"><b>'+t+' / '+TARGET+' min</b><span class="soft grow" style="text-align:right">'+(d===0?"¡Sesión completa!":(d<0?"Faltan "+(-d)+" min":"Te pasas "+d+" min"))+'</span></div><div class="bar"><i style="width:'+Math.min(100,t/TARGET*100)+'%;background:'+col+'"></i></div></div>';
+if(!s.items.length)h+='<div class="soft" style="text-align:center;margin:14px">Añade ejercicios a la sesión.</div>';
+s.items.forEach(function(i,k){if(i.kind==="parallel"){if(ei===k){h+=parallelForm(i,k);return}var pd=itemMin(i);h+='<div class="parallel"><div class="parallel-head"><div class="parallel-title">'+(k+1)+'. '+esc(i.n)+'</div><span class="tag">'+pd+' min reales</span></div><div class="parallel-note">⚡ Los grupos trabajan simultáneamente. Solo se contabilizan '+pd+' minutos.</div>';(i.groups||[]).forEach(function(g,z){h+='<div class="group"><div class="group-title">'+esc(g.n||('Grupo '+(z+1)))+'</div><div class="poschips">'+posTags(g.pos)+'</div><div class="soft">'+(+g.m||0)+' min · '+esc(g.d||'')+'</div></div>'});h+='<div class="parallel-total">Tiempo de sesión: +'+pd+' min</div><div class="row" style="margin-top:8px"><span class="grow"></span><button class="s" onclick="editParallel('+k+')">✎ Editar grupos</button><button class="s x" onclick="rm('+k+')">Quitar</button></div></div>';return}if(ei===k){h+=itemForm(i,k);return}h+='<div class="card">'+((i.t||i.L)?'<div style="max-width:240px">'+diagSVG(i)+'</div>':"")+'<div class="row" style="margin-top:8px"><div class="grow"><b>'+(k+1)+'. '+esc(i.n)+'</b> <span class="tag">'+esc(i.c)+'</span>'+(i.pos&&i.pos.length?'<div class="poschips">'+posTags(i.pos)+'</div>':"")+'<div class="soft">'+esc(i.d)+'</div>'+vl(i.v)+'</div><input class="mn" type="number" inputmode="numeric" value="'+i.m+'" onchange="setM('+k+',this.value)"></div><div class="row" style="margin-top:8px"><button class="s" onclick="mv('+k+',-1)">▲</button><button class="s" onclick="mv('+k+',1)">▼</button><span class="grow"></span><button class="s" onclick="editI('+k+')">✎ Editar</button><button class="s x" onclick="rm('+k+')">Quitar</button></div></div>'});
+if(picker){h+='<div class="card"><h2>Elegir ejercicio</h2><div class="chips">'+["Todos"].concat(CATS).map(function(c){return'<button class="s '+(pcat===c?"on":"")+'" onclick="pc(\''+c+'\')">'+c+'</button>'}).join("")+'</div>';
+ex.filter(function(e){return pcat==="Todos"||e.c===pcat}).forEach(function(e){h+=exRow(e,'<div class="row"><button class="s p" onclick="addI(\''+e.id+'\')">Añadir</button><button class="s" onclick="editEx(\''+e.id+'\')">Editar</button></div>')});h+='<button onclick="picker=false;R()">Cerrar</button></div>'}
+else {h+='<button class="p" style="width:100%;margin-bottom:8px" onclick="picker=true;R()">+ Añadir ejercicio</button>';h+='<button style="width:100%;margin-bottom:8px;border-color:#4aa3df" onclick="addWater()">💧 + Pausa agua (5 min)</button>';h+='<button style="width:100%;margin-bottom:10px;border-color:var(--ac)" onclick="addParallel()">⚡ + Trabajo simultáneo por posiciones</button>';}
+h+='<div class="soft" style="margin:6px 0 4px">Estado de la sesión</div><div class="row" style="margin-bottom:8px">'+[["programada","📅 Programada"],["finalizada","✅ Finalizada"],["cancelada","❌ Cancelada"]].map(function(x){return '<button class="grow s '+((s.st||"programada")===x[0]?"on":"")+'" onclick="setF(\'st\',\''+x[0]+'\')">'+x[1]+'</button>'}).join("")+'</div><button class="p" style="width:100%;margin-bottom:8px" onclick="finS()">💾 Guardar sesión</button><div class="row"><button class="grow" onclick="copyS()">📋 Copiar</button><button class="grow" onclick="pdfS()">📄 PDF</button><button class="grow" onclick="dupS(\''+s.id+'\')">Duplicar</button><button class="x" onclick="delS(\''+s.id+'\')">Borrar</button></div>'}
+else if(tab==="ses"){if(toast){h+='<div class="card" style="border-color:var(--ac)">'+esc(toast)+'</div>';toast=""}
+h+='<button class="p" style="width:100%;margin-bottom:10px" onclick="newS()">+ Crear entreno</button>';
+h+='<div class="row" style="margin-bottom:12px"><button class="grow on" onclick="filterHome(1)">📅 Programadas</button><button class="grow on" onclick="filterHome(2)">✅ Realizadas</button></div>';
+var done=ses.filter(function(s){return s.st==="finalizada"}).slice().sort(function(a,b){return b.date.localeCompare(a.date)});
+var planned=ses.filter(function(s){return s.st!=="finalizada"&&s.st!=="cancelada"}).slice().sort(function(a,b){return a.date.localeCompare(b.date)});
+if(homeFilter!=="realizadas")h+=homeList(planned,"Programadas","📅","No hay entrenamientos programados.");
+if(homeFilter!=="programadas")h+=homeList(done,"Realizados","✅","Todavía no hay entrenamientos realizados.");
+}
+if(cur&&!ef)h+=shareCard();
+document.getElementById("app").innerHTML=h}
+R();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./sw.js").catch(function(){});
+  });
+}
+</script>
+</body></html>
